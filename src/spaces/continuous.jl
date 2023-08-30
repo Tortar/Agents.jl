@@ -148,7 +148,8 @@ function move_agent!(agent::A, pos::ValidPos, model::ABM{<:ContinuousSpace{D},A}
         remove_agent_from_space!(agent, model, oldcell)
         add_agent_to_space!(agent, model, newcell)
     end
-    agent.pos = pos
+    reset_pos_field(agent, pos, model)
+    #agent.pos = pos
     return agent
 end
 
@@ -321,7 +322,7 @@ Return a boolean encoding whether the collision happened.
 Example usage in [Continuous space social distancing](
 https://juliadynamics.github.io/AgentsExampleZoo.jl/dev/examples/social_distancing/).
 """
-function elastic_collision!(a, b, f = nothing)
+function elastic_collision!(a, b, model, f = nothing)
     # Do elastic collision according to
     # https://en.wikipedia.org/wiki/Elastic_collision#Two-dimensional_collision_with_two_moving_objects
     T = typeof(a.pos) # assumes that a and b have same field types
@@ -351,8 +352,10 @@ function elastic_collision!(a, b, f = nothing)
         f1 = (2m2 / (m1 + m2))
         f2 = (2m1 / (m1 + m2))
     end
-    a.vel = v1 .- f1 .* (dot(dv, r1) / n) .* (r1)
-    b.vel = v2 .+ f2 .* (dot(dv, r2) / n) .* (r2)
+    vel_a = v1 .- f1 .* (dot(dv, r1) / n) .* (r1)
+    a = reset_vel_field(a, vel_a, model)
+    vel_b = v2 .+ f2 .* (dot(dv, r2) / n) .* (r2)
+    b = reset_vel_field(b, vel_b, model)
     return true
 end
 

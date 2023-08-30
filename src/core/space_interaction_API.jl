@@ -124,7 +124,7 @@ The agent's position is updated to match `pos` after the move.
 """
 function move_agent!(agent::A, pos::ValidPos, model::ABM{<:AbstractSpace,A}) where {A<:AbstractAgent}
     remove_agent_from_space!(agent, model)
-    agent.pos = pos
+    agent = reset_pos_field(agent, pos, model)
     add_agent_to_space!(agent, model)
     return agent
 end
@@ -211,12 +211,12 @@ the `agent`'s position.
 The type of `pos` must match the underlying space position type.
 """
 function add_agent!(agent::AbstractAgent, model::ABM)
-    agent.pos = random_position(model)
+    agent = reset_pos_field(agent, random_position(model), model)
     add_agent_pos!(agent, model)
 end
 
 function add_agent!(agent::AbstractAgent, pos::ValidPos, model::ABM)
-    agent.pos = pos
+    agent = reset_pos_field(agent, pos, model)
     add_agent_pos!(agent, model)
 end
 

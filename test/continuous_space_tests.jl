@@ -410,7 +410,7 @@ using LinearAlgebra: norm, dot
         function model_step!(model)
             ipairs = interacting_pairs(model, diameter, :nearest)
             for (a1, a2) in ipairs
-                e = elastic_collision!(a1, a2, :mass)
+                e = elastic_collision!(a1, a2, model, :mass)
                 if e
                     abmproperties(model)[:c] += 1
                 end

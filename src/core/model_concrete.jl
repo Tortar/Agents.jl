@@ -4,18 +4,20 @@ using StaticArrays: SizedVector
 ContainerType{A} = Union{AbstractDict{Int,A}, AbstractVector{A}}
 
 # And the three implementations here are just variants with different `C` type.
-struct SingleContainerABM{S<:SpaceType,A<:AbstractAgent,C<:ContainerType{A},F,P,R<:AbstractRNG} <: AgentBasedModel{S,A}
+struct SingleContainerABM{S<:SpaceType,A<:AbstractAgent,C<:ContainerType{A},F,P,R<:AbstractRNG,M} <: AgentBasedModel{S,A}
     agents::C
     space::S
     scheduler::F
     properties::P
     rng::R
     maxid::Base.RefValue{Int64}
+    agentsmutable::M
 end
 
 const SCABM = SingleContainerABM
-const StandardABM = SingleContainerABM{S,A,Dict{Int,A}} where {S,A,C}
-const UnremovableABM = SingleContainerABM{S,A,Vector{A}} where {S,A,C}
+const StandardABM = SCABM{S,A,Dict{Int,A}} where {S,A}
+const UnremovableABM = SCABM{S,A,Vector{A}} where {S,A}
+const ImmutableABM = SCABM{S,A,C,F,P,R,Val{false}} where {S,A,C,F,P,R}
 
 containertype(::SingleContainerABM{S,A,C}) where {S,A,C} = C
 
@@ -47,7 +49,9 @@ function SingleContainerABM(
     agent_validator(A, space, warn)
     C = construct_agent_container(container, A)
     agents = C()
-    return SingleContainerABM{S,A,C,F,P,R}(agents, space, scheduler, properties, rng, Ref(0))
+    agentsmutable = Val(ismutabletype(A))
+    M = typeof(agentsmutable)
+    return SingleContainerABM{S,A,C,F,P,R,M}(agents, space, scheduler, properties, rng, Ref(0), agentsmutable)
 end
 
 function SingleContainerABM(agent::AbstractAgent, args::Vararg{Any, N}; kwargs...) where {N}
@@ -118,6 +122,17 @@ function remove_agent_from_model!(agent::A, model::UnremovableABM) where {A<:Abs
     error("Cannot remove agents in a `UnremovableABM`")
 end
 
+function reset_pos_field(agent, new_value, model::ImmutableABM)
+    @reset agent.pos = new_value
+    agent_container(model)[agent.id] = agent
+    return agent
+end
+
+function reset_vel_field(agent, new_value, model::ImmutableABM) 
+    @reset agent.vel = new_value
+    agent_container(model)[agent.id] = agent
+    return agent
+end
 
 #######################################################################################
 # %% Model construction validation

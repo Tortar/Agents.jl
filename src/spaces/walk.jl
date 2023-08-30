@@ -238,7 +238,7 @@ function randomwalk!(
     θ = rand(abmrng(model), polar)
     relative_r = r/LinearAlgebra.norm(agent.vel)
     direction = T(rotate(SVector(agent.vel), θ) .* relative_r)
-    agent.vel = direction
+    agent = reset_vel_field(agent, direction, model)
     walk!(agent, direction, model)
 end
 
@@ -254,7 +254,7 @@ function randomwalk!(
     T = typeof(agent.pos)
     θ = rand(abmrng(model), polar)
     direction = T(rotate(SVector(agent.vel), θ))
-    agent.vel = direction
+    agent = reset_vel_field(agent, direction, model)
     walk!(agent, direction, model)
 end
 
@@ -276,7 +276,7 @@ function randomwalk!(
     ϕ = rand(abmrng(model), isnothing(azimuthal) ? Arccos(-1,1) : azimuthal)
     relative_r = r/LinearAlgebra.norm(agent.vel)
     direction = T(rotate(SVector(agent.vel), θ, ϕ) .* relative_r)
-    agent.vel = direction
+    agent = reset_vel_field(agent, direction, model)
     walk!(agent, direction, model)
 end
 
@@ -293,7 +293,7 @@ function randomwalk!(
     θ = rand(abmrng(model), isnothing(polar) ? Uniform(-π,π) : polar)
     ϕ = rand(abmrng(model), isnothing(azimuthal) ? Arccos(-1,1) : azimuthal)
     direction = T(rotate(SVector(agent.vel), θ, ϕ))
-    agent.vel = direction
+    agent = reset_vel_field(agent, direction, model)
     walk!(agent, direction, model)
 end
 
@@ -366,6 +366,6 @@ function uniform_randomwalk!(
     else
         direction = T(rand(rng, (-1, 1)) * r / sqrt(D) for _ in 1:D)
     end
-    agent.vel = direction
+    agent = reset_vel_field(agent, direction, model)
     walk!(agent, direction, model)
 end

@@ -7,6 +7,7 @@ module Agents
     read(path, String)
 end Agents
 
+using Accessors
 using Distributed
 using DataStructures
 using Graphs
